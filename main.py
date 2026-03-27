@@ -481,7 +481,7 @@ async def start(message, state):
             InlineKeyboardButton(text="➕ Подписаться на команду", callback_data="events:0")
         ]
     ])
-    await message.answer("Приветствуем Вас в боте <tg-emoji emoji-id='5370740459142409053'>👋</tg-emoji> Турнира математических игр kπца\n\nТут Вы можете подписаться на свою любимую команду и получать уведомления о ее результатах на играх", reply_markup=keyboard)
+    await message.answer("Приветствуем Вас в боте Турнира математических игр <tg-emoji emoji-id='5370740459142409053'>👋</tg-emoji>\n\nТут Вы можете подписаться на свою любимую команду и получать уведомления о ее результатах на играх", reply_markup=keyboard)
 
 
 async def main():
