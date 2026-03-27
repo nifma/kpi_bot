@@ -17,3 +17,7 @@ db_connection_config = {
 
 
 SOCKS5_PROXY = os.getenv("SOCKS5_PROXY", "")
+
+SOCKET_IO_URL = os.getenv("SOCKET_IO_URL")
+
+KPI_API_URL = os.getenv("KPI_API_URL")

@@ -45,9 +45,9 @@ def my_message(event, data):
             text = f"Кварталы. Задача №{data['question_num']}. {team}. {league}\n\n"
 
             if data['delta_correct'] > 0:
-                text += "Поулчени верный ответ\n"
+                text += "Поулчен верный ответ\n"
             elif data['delta_incorrect'] > 0:
-                text += "Поулчени неверный ответ\n"
+                text += "Поулчен неверный ответ\n"
             elif data['delta_correct'] < 0:
                 text += "Убран верный ответ\n"
             elif data['delta_incorrect'] < 0:
@@ -62,7 +62,7 @@ def my_message(event, data):
                 text = f"Квартал №{data['kvartal']} снова открыт. {team}. {league}\n\nСчет: {data['total']}"
 
         elif data["type"] == "kvartaly_set_penalty":
-            text = f"Квартал. Пенальти. {team}. {league}\n\nПенатльти: {data['penalty']}\n\nСчет: {data['total']}"
+            text = f"Кварталы. Пенальти. {team}. {league}\n\nПенальти: {data['penalty']}\n\nСчет: {data['total']}"
 
         elif data["type"] == "fudzi_set_answer":
             text = f"Фудзи. Задача №{data['question_num']}. {team}. {league}\n\n"
@@ -77,7 +77,7 @@ def my_message(event, data):
             text += f"Балл за задачу: {data['score']}\n\nСчет: {data['total']}"
         
         elif data["type"] == "fudzi_set_penalty":
-            text = f"Фудзи. Пенальти. {team}. {league}\n\nПенатльти: {data['penalty']}\n\nСчет: {data['total']}"
+            text = f"Фудзи. Пенальти. {team}. {league}\n\nПенальти: {data['penalty']}\n\nСчет: {data['total']}"
 
 
         for sub in subs:
@@ -88,7 +88,7 @@ def my_message(event, data):
             time.sleep(.05)
 
 def run_socketio():
-    sio.connect("https://test.kpiturnir.ru?type=bot", transports=["websocket", "polling"])
+    sio.connect(SOCKET_IO_URL, transports=["websocket", "polling"])
     sio.wait()
     
 @dp.callback_query(lambda c: c.data == "start")
@@ -134,7 +134,7 @@ async def process_events(callback):
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
 
     if all_events != []:
-        await message.edit_text("Выберите мероприятие, на котором участвует команда", reply_markup=keyboard)
+        await message.edit_text("Выберите мероприятие, в котором участвует команда", reply_markup=keyboard)
     else:
         await message.edit_text("Мероприятий нет", reply_markup=keyboard)
 
@@ -196,7 +196,7 @@ async def process_locations(callback, state):
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
 
     if all_locations != []: 
-        await message.edit_text("Выберите местро провдения мероприятия", reply_markup=keyboard)
+        await message.edit_text("Выберите место проведения мероприятия", reply_markup=keyboard)
     else:
         await message.edit_text("Место мероприятия еще не определено", reply_markup=keyboard)
 
@@ -252,7 +252,7 @@ async def process_leagues(callback, state):
         keyboard.append(pagination_row)
 
     keyboard.append([
-        InlineKeyboardButton(text="🔙 Назад", callback_data="loactions:0")
+        InlineKeyboardButton(text="🔙 Назад", callback_data="locations:0")
     ])
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -285,38 +285,38 @@ async def process_league(callback, state):
 async def process_teams(callback, state):
     message = callback.message
     data = callback.data
+    user_id = message.chat.id
     state_data = await state.get_data()
 
     shift = int(data.split(":")[1])
     cnt = 5
-    all_teams = get_teams(state_data.get("event_id"), state_data.get("location_id"), state_data.get("league_id"))
+    all_teams = get_teams(state_data.get("league_id"))
     all_teams = [team for team in all_teams if (team["status"] == "ACCEPTED") or (team["status"] == "ARRIVED")]
     teams = all_teams[shift:shift+cnt]
 
+    cursor.execute("SELECT team_id FROM subscriptions WHERE user_id=%s", (user_id,))
+    subs = cursor.fetchall()
+
     keyboard = []
     for team in teams:
-        print(team['status'])
-        keyboard.append([
-            InlineKeyboardButton(text=team['name'], callback_data=f"team:{team['id']}")
-        ])
-
-    pagination_row = []
-
-    if shift > 0:
-        pagination_row.append(  
-            InlineKeyboardButton(text="⬅️", callback_data=f"teams:{shift-cnt}")
-        )
-
-    if shift+cnt < len(all_teams):
-        pagination_row.append(
-            InlineKeyboardButton(text="➡️", callback_data=f"teams:{shift+cnt}")
-        )
-
-    if pagination_row:
-        keyboard.append(pagination_row)
+        print(subs, {"team_id": team['id']}, {"team_id": team['id']} in subs)
+        if {"team_id": team['id']} in subs:
+            keyboard.append([
+                InlineKeyboardButton(text=team['name'], callback_data=f"team:{team['id']}", style="success")
+            ])
+        else:
+            keyboard.append([
+                InlineKeyboardButton(text=team['name'], callback_data=f"team:{team['id']}")
+            ])
 
     keyboard.append([
-        InlineKeyboardButton(text="🔙 Назад", callback_data="loactions:0")
+        InlineKeyboardButton(text="⬅️", callback_data=f"teams:{max(shift-cnt, 0)}"),
+        InlineKeyboardButton(text=f"{shift//cnt+1}/{(len(all_teams)+cnt-1)//cnt}", callback_data=f"pages"),
+        InlineKeyboardButton(text="➡️", callback_data=f"teams:{min(shift+cnt, (len(all_teams)+cnt-1)//cnt*cnt-cnt)}")
+    ])
+
+    keyboard.append([
+        InlineKeyboardButton(text="🔙 Назад", callback_data="leagues:0")
     ])
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -481,7 +481,7 @@ async def start(message, state):
             InlineKeyboardButton(text="➕ Подписаться на команду", callback_data="events:0")
         ]
     ])
-    await message.answer("Приветствуем Вас в боте Турнира математических игр kπца\n\nТут Вы можете подписаться на свою любимую команду и получать уведомления о ее результатах на играх", reply_markup=keyboard)
+    await message.answer("Приветствуем Вас в боте <tg-emoji emoji-id='5370740459142409053'>👋</tg-emoji> Турнира математических игр kπца\n\nТут Вы можете подписаться на свою любимую команду и получать уведомления о ее результатах на играх", reply_markup=keyboard)
 
 
 async def main():
