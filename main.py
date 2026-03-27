@@ -45,9 +45,9 @@ def my_message(event, data):
             text = f"Кварталы. Задача №{data['question_num']}. {team}. {league}\n\n"
 
             if data['delta_correct'] > 0:
-                text += "Поулчен верный ответ\n"
+                text += "Получен верный ответ\n"
             elif data['delta_incorrect'] > 0:
-                text += "Поулчен неверный ответ\n"
+                text += "Получен неверный ответ\n"
             elif data['delta_correct'] < 0:
                 text += "Убран верный ответ\n"
             elif data['delta_incorrect'] < 0:
@@ -436,7 +436,7 @@ async def process_subscribe(callback):
             InlineKeyboardButton(text="🔙 Назад", callback_data="subscriptions:0")
         ]
     ])
-    await message.edit_text(f"<b>{sub['team']} • {sub['league']}</b>\n\n<b>Мероприятие:</b> {sub['event']}\n<b>Место проведения:</b> {sub['location']}\n<b>Лига:</b> {sub['league']}\n<b>Комнада:</b> {sub['team']}", reply_markup=keyboard)
+    await message.edit_text(f"<b>{sub['team']} • {sub['league']}</b>\n\n<b>Мероприятие:</b> {sub['event']}\n<b>Место проведения:</b> {sub['location']}\n<b>Лига:</b> {sub['league']}\n<b>Команда:</b> {sub['team']}", reply_markup=keyboard)
     
 
 @dp.callback_query(lambda c: c.data.startswith("unsubscribe:"))
