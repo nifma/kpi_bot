@@ -291,7 +291,7 @@ async def process_teams(callback, state):
     shift = int(data.split(":")[1])
     cnt = 5
     all_teams = get_teams(state_data.get("league_id"))
-    all_teams = [team for team in all_teams if (team["status"] == "ACCEPTED") or (team["status"] == "ARRIVED")]
+    all_teams = [team for team in all_teams if (team["status"] == "PAID") or (team["status"] == "ARRIVED") or (team["status"] == "DOCUMENTS_SUBMITTED")]
     teams = all_teams[shift:shift+cnt]
 
     cursor.execute("SELECT team_id FROM subscriptions WHERE user_id=%s", (user_id,))
