@@ -20,6 +20,10 @@ logging.basicConfig(level=logging.INFO)
 con = mysql.connector.connect(**db_connection_config)
 cursor = con.cursor(dictionary=True)
 
+socket_con = mysql.connector.connect(**db_connection_config)
+socket_cursor = socket_con.cursor(dictionary=True)
+
+
 session = AiohttpSession(proxy=SOCKS5_PROXY) if SOCKS5_PROXY else AiohttpSession()
 bot = Bot(
     token=BOT_TOKEN, 
@@ -34,8 +38,8 @@ sio = socketio.Client(logger=True, engineio_logger=True)
 
 @sio.on("*")
 def my_message(event, data):
-    cursor.execute("SELECT * FROM subscriptions WHERE team_id=%s", (data["team_id"],))
-    subs = cursor.fetchall()
+    socket_cursor.execute("SELECT * FROM subscriptions WHERE team_id=%s", (data["team_id"],))
+    subs = socket_cursor.fetchall()
 
     if subs != []:
         team = subs[-1]["team"]
