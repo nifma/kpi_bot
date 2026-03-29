@@ -20,10 +20,6 @@ logging.basicConfig(level=logging.INFO)
 con = mysql.connector.connect(**db_connection_config)
 cursor = con.cursor(dictionary=True)
 
-socket_con = mysql.connector.connect(**db_connection_config)
-socket_cursor = socket_con.cursor(dictionary=True)
-
-
 session = AiohttpSession(proxy=SOCKS5_PROXY) if SOCKS5_PROXY else AiohttpSession()
 bot = Bot(
     token=BOT_TOKEN, 
@@ -38,6 +34,9 @@ sio = socketio.Client(logger=True, engineio_logger=True)
 
 @sio.on("*")
 def my_message(event, data):
+    socket_con = mysql.connector.connect(**db_connection_config)
+    socket_cursor = socket_con.cursor(dictionary=True)
+    
     socket_cursor.execute("SELECT * FROM subscriptions WHERE team_id=%s", (data["team_id"],))
     subs = socket_cursor.fetchall()
 
@@ -90,6 +89,8 @@ def my_message(event, data):
                 event_loop
             )
             time.sleep(.05)
+            
+    socket_con.close()
 
 def run_socketio():
     sio.connect(SOCKET_IO_URL, transports=["websocket", "polling"])
@@ -505,3 +506,4 @@ if __name__ == "__main__":
     finally:
         sio.disconnect()
         con.close()
+        
